@@ -1,119 +1,92 @@
-# React + TypeScript + Vite
+# Codex Widget Sandbox
 
-This template provides a complete, modern setup for React applications using Vite, TypeScript, TailwindCSS, ESLint, i18n, and Vitest. It is the ideal starting point for scalable and maintainable projects.
+A React + TypeScript sandbox for coding agents that generate small iframe-ready widgets: roadmaps, charts, interactive panels, and focused embedded tools.
 
-## Key Versions
+Agents work in normal React source files, while the watched production build emits one self-contained file at `dist/index.html`. JavaScript, CSS, and imported assets are inlined so the result is easy to embed in a canvas app iframe.
 
-| Package                | Version    |
-|------------------------|------------|
-| React                  | ^19.1.1    |
-| Vite                   | ^7.1.2     |
-| TypeScript             | ~5.8.3     |
-| Vitest                 | ^3.2.4     |
-| ESLint                 | ^9.33.0    |
-| TailwindCSS            | ^4.1.13    |
-| i18next                | ^25.5.2    |
-| react-router           | ^7.8.2     |
+## Requirements
 
-## Features
+- Node `20.19+` or `22.12+`
+- npm `11+`
 
-- **React 19 + TypeScript**: Modern component development with type safety.
-- **Vite**: Lightning-fast development with Hot Module Replacement (HMR).
-- **TailwindCSS**: Utility-first CSS framework for rapid UI development.
-- **ESLint**: Strict, type-based linting rules for clean code.
-- **Internationalization (i18n)**: Example translations for multiple languages included.
-- **Vitest**: Test setup for components and pages included.
-- **PostCSS & SCSS**: Modern styling options.
-- **Well-structured project layout**: Easy to extend and collaborate in teams.
-
-## Getting Started
-
-1. **Clone the repository**
-   ```bash
-   git clone <repo-url>
-   cd vite-base
-   ```
-2. **Install dependencies**
-   ```bash
-   yarn install
-   ```
-3. **Start the development server**
-   ```bash
-   yarn dev
-   ```
-4. **Run tests**
-   ```bash
-   yarn test
-   ```
-
-## Useful yarn scripts
-
-- `yarn dev` – Start development server
-- `yarn build` – Build for production
-- `yarn preview` – Preview production build
-- `yarn lint` – Run ESLint
-- `yarn test` – Run Vitest
-
-## Best Practices & Extensions
-
-### ESLint Configuration for Production (Advanced)
-
-Use type-based rules for maximum code quality:
-
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      ...tseslint.configs.recommendedTypeChecked,
-      ...tseslint.configs.strictTypeChecked,
-      ...tseslint.configs.stylisticTypeChecked,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-  },
-])
+```bash
+npm install
+npm start
 ```
 
-For React-specific rules:
+## One Startup Command
 
-```js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+`npm start` runs both parts of the widget workflow:
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      reactX.configs['recommended-typescript'],
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-  },
-])
+- Vite dev server for browser and Playwright preview.
+- `vite build --watch` for continuous single-file `dist/index.html` generation.
+
+There are no required test, lint, preview, or separate build scripts. For one-off maintenance, use direct commands such as `npx vite build` or `npx shadcn@latest add <component>`.
+
+## Widget Constraints
+
+- This is a widget sandbox, not a full app framework.
+- Start from `src/App.tsx`.
+- Do not add routes, app shells, auth flows, backend assumptions, navigation systems, or runtime i18n.
+- Do not add files under `public/`; Vite public files are disabled for production.
+- Import small images from source only when needed so Vite can inline them as base64/data URLs.
+- Avoid runtime fetches for local files, locale JSON, or other assets that would break the single-file output.
+- Keep iframe behavior in mind: no browser route assumptions, parent-page layout assumptions, or full-page navigation.
+- Automated tests are not required for normal widget generation; preview in the browser and keep the implementation simple.
+
+## shadcn/ui And Charts
+
+This template includes shadcn/ui configuration plus `button`, `card`, and `chart` components. The chart primitive is generated from shadcn/ui and uses Recharts.
+
+The shadcn CLI is intentionally not pinned in `package.json`; use `npx shadcn@latest` so agents fetch the current registry CLI when adding source components.
+
+Add more components with:
+
+```bash
+npx shadcn@latest add <component>
 ```
 
-### Internationalization (i18n)
+Typical chart imports:
 
-Sample translation files are included under `public/locales/`. Integration is handled via `src/i18n.tsx`.
+```tsx
+import { Bar, BarChart } from "recharts"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+```
 
-### Tests
+Use `ChartContainer` with a fixed height, `min-h-*`, or `aspect-*` class so Recharts can measure correctly.
 
-Component and page tests are located in `src/tests/` and can be run with Vitest.
+## Project Skills
 
----
+Repo-scoped Codex skills live in `.agents/skills`. This is intentional: Codex scans `.agents/skills` for project-specific skills, while user-wide skills live under `~/.codex/skills`.
 
-**This template is the ideal foundation for your next React project – fast, robust, and extensible!**
+Included skills:
 
-For questions or suggestions, feel free to open an issue or submit a pull request.
+- `find-skills` from skills.sh tooling
+- `shadcn` from shadcn/ui
+- `playwright-cli` from Microsoft Playwright
+
+Refresh commands:
+
+```bash
+npx -y skills add vercel-labs/skills --skill find-skills --agent codex --copy
+npx -y skills add shadcn/ui --skill shadcn --agent codex --copy
+npx -y skills add https://github.com/microsoft/playwright/tree/main/packages/playwright-core/src/tools/cli-client/skill --agent codex --copy
+```
+
+## Handoff Check
+
+Before handing off a generated widget:
+
+```bash
+npm start
+```
+
+Wait for the first successful build, preview the dev URL, then stop the process when finished. Confirm the production output:
+
+```bash
+find dist -maxdepth 2 -type f
+```
+
+The final command should show only `dist/index.html`.
+
+References: [OpenAI Codex skills docs](https://developers.openai.com/codex/skills), [OpenAI AGENTS.md docs](https://developers.openai.com/codex/guides/agents-md), and [skills.sh CLI docs](https://skills.sh/docs/cli).
